@@ -9,6 +9,18 @@ function validateStudentId(field) {
   return '';
 }
 
+function validateUsername(field)
+//at least 5 characters long & only a-z,A-Z,0-9,_,-
+    {
+        if (field == "") return "No Username was entered.\n" //checking for empty
+        else if (field.length < 5) //checking for lenght of at least 5 characters 
+            return "Usernames must be at least 5 characters.\n"
+        //^ = represents a negated character class, which matches any character that is not specified within the square brackets
+        else if (/[^a-zA-Z0-9_-]/.test(field)) // symbol ^ means any other one than a-zA-Z0-9_-
+            return "Only a-z, A-Z, 0-9, - and _ allowed in Usernames.\n"
+        return ""
+    }
+
 function validateEmail(field) {
   if (field == '') return 'No Email was entered.\n';
   else if (
