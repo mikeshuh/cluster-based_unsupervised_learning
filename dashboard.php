@@ -17,94 +17,92 @@ if (!isset($_SESSION['initiated'])) {
 if (isset($_SESSION['check'])
     && $_SESSION['check'] != hash('ripemd128', $_SERVER['REMOTE_ADDR'].$_SERVER['HTTP_USER_AGENT'])) different_user();
 
-// authenticate if user signup/login
-if (authenticateUser()) { // user authenticated, allow access to webpage
-    // webpage (search advisor)
-    echo <<<_END
-    <html>
-    <head>
-      <title>Search Advisor</title>
-      <style>
-        .signup {
-          border: 1px solid #999999;
-          font: normal 14px helvetica;
-          color: #444444;
-        }
-      </style>
-    </head>
-    <body>
-      <!-- log out -->
-      <form action="dashboard.php" method="post">
-        <input type="submit" name="logout" value="Log Out" />
-      </form>
-      <!-- search advisor -->
-      <form method="post" action="dashboard.php">
-        <table border="0" cellpadding="2" cellspacing="5" bgcolor="#eeeeee">
-          <th colspan="2" align="center">Search Advisor</th>
-          <tr>
-            <td>Name</td>
-            <td><input type="text" maxlength="255" name="name" /></td>
-          </tr>
-          <tr>
-            <td>Student ID</td>
-            <td><input type="text" maxlength="9" name="studentId" /></td>
-          </tr>
-          <tr>
-            <td colspan="2" align="center">
-              <input type="submit" value="Search" />
-            </td>
-          </tr>
-        </table>
-      </form>
-    </body>
-    </html>
-_END;
-
-    // check log out
-    if (isset($_POST['logout'])) {
-        // destroy session
-        destroy_session_and_data();
-        $conn->close();
-
-        // redirect to second page
-        header('Location: login_signup.php');
-        exit();
-    }
-
-    // check seach advisor input
-    if (isset($_POST['name']) && isset($_POST['studentId'])) {
-        // sanitize inputs
-        $name = sanitizeString($_POST['name']);
-        $studentId = sanitizeString($_POST['studentId']);
-
-        // no entry for name or student ID
-        if($name == '' || $studentId =='') echo 'Enter a Name and Student ID.';
-        // check if student exists
-        else if (searchStudent($name, $studentId)) { // student exists
-            // query for assocaited advisor
-            $advisorInfo = searchAdvisor($studentId);
-            
-            if (empty($advisorInfo)) { // no query results
-                echo 'No listed advisor.';
-            }
-            else { // output advisor info
-                echo <<<_END
-                <p>
-                    <b><u>Advisor</u></b><br>
-                    <b>Name: </b>$advisorInfo[0]<br>
-                    <b>Email: </b>$advisorInfo[1]<br>
-                    <b>Phone: </b>$advisorInfo[2]
-                </p>
-_END;
-            }
-        }
-        else echo 'No such student exists.';
-    }
-}
-else { // user not authenticated, redirect to second page
+if (!authenticateUser()) {
     $conn->close();
-    echo 'Please <a href="login_signup.php">click here</a> to sign up/log in.';
+    header('Location: login_signup.php');
+    exit();
 }
+
+// check log out
+if (isset($_POST['logout'])) {
+    // destroy session
+    destroy_session_and_data();
+    $conn->close();
+
+    // redirect to second page
+    header('Location: login_signup.php');
+    exit();
+}
+
+// check seach advisor input
+if (isset($_POST['name']) && isset($_POST['studentId'])) {
+    // sanitize inputs
+    $name = sanitizeString($_POST['name']);
+    $studentId = sanitizeString($_POST['studentId']);
+
+    // no entry for name or student ID
+    if($name == '' || $studentId =='') echo 'Enter a Name and Student ID.';
+    // check if student exists
+    else if (searchStudent($name, $studentId)) { // student exists
+        // query for assocaited advisor
+        $advisorInfo = searchAdvisor($studentId);
+        
+        if (empty($advisorInfo)) { // no query results
+            echo 'No listed advisor.';
+        }
+        else { // output advisor info
+            echo <<<_END
+            <p>
+                <b><u>Advisor</u></b><br>
+                <b>Name: </b>$advisorInfo[0]<br>
+                <b>Email: </b>$advisorInfo[1]<br>
+                <b>Phone: </b>$advisorInfo[2]
+            </p>
+_END;
+        }
+    }
+    else echo 'No such student exists.';
+}
+
+echo <<<_END
+  <html>
+  <head>
+    <title>Search Advisor</title>
+    <style>
+      .signup {
+        border: 1px solid #999999;
+        font: normal 14px helvetica;
+        color: #444444;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- log out -->
+    <form action="dashboard.php" method="post">
+      <input type="submit" name="logout" value="Log Out" />
+    </form>
+    <!-- search advisor -->
+    <form method="post" action="dashboard.php">
+      <table border="0" cellpadding="2" cellspacing="5" bgcolor="#eeeeee">
+        <th colspan="2" align="center">Search Advisor</th>
+        <tr>
+          <td>Name</td>
+          <td><input type="text" maxlength="255" name="name" /></td>
+        </tr>
+        <tr>
+          <td>Student ID</td>
+          <td><input type="text" maxlength="9" name="studentId" /></td>
+        </tr>
+        <tr>
+          <td colspan="2" align="center">
+            <input type="submit" value="Search" />
+          </td>
+        </tr>
+      </table>
+    </form>
+  </body>
+  </html>
+_END;
 
 $conn->close();
 
