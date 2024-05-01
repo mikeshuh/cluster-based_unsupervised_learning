@@ -23,33 +23,43 @@ if (authenticateUser()) { // user authenticated, allow access to webpage
     echo <<<_END
     <html>
     <head>
-        <title>Search Advisor</title>
-        <style>
+      <title>Search Advisor</title>
+      <style>
         .signup {
-            border:1px solid #999999; font: normal 14px helvetica; color: #444444;
+          border: 1px solid #999999;
+          font: normal 14px helvetica;
+          color: #444444;
         }
-        </style>
+      </style>
     </head>
     <body>
-        <!-- log out -->
-        <form action="hw6_first_page.php" method="post"> 
-            <input type="submit" name="logout" value="Log Out">
-        </form> 
-        <!-- search advisor -->
-        <form method="post" action="hw6_first_page.php">
-            <table border="0" cellpadding="2" cellspacing="5" bgcolor="#eeeeee">
-                <th colspan="2" align="center">Search Advisor</th>
-                <tr><td>Name</td>
-                    <td><input type="text" maxlength="255" name="name"></td></tr>
-                <tr><td>Student ID</td>
-                    <td><input type="text" maxlength="9" name="studentId"></td></tr>
-                <tr><td colspan="2" align="center"><input type="submit" value="Search"></td></tr>
-            </table>
-        </form>
+      <!-- log out -->
+      <form action="dashboard.php" method="post">
+        <input type="submit" name="logout" value="Log Out" />
+      </form>
+      <!-- search advisor -->
+      <form method="post" action="dashboard.php">
+        <table border="0" cellpadding="2" cellspacing="5" bgcolor="#eeeeee">
+          <th colspan="2" align="center">Search Advisor</th>
+          <tr>
+            <td>Name</td>
+            <td><input type="text" maxlength="255" name="name" /></td>
+          </tr>
+          <tr>
+            <td>Student ID</td>
+            <td><input type="text" maxlength="9" name="studentId" /></td>
+          </tr>
+          <tr>
+            <td colspan="2" align="center">
+              <input type="submit" value="Search" />
+            </td>
+          </tr>
+        </table>
+      </form>
     </body>
     </html>
 _END;
-    
+
     // check log out
     if (isset($_POST['logout'])) {
         // destroy session
@@ -57,7 +67,7 @@ _END;
         $conn->close();
 
         // redirect to second page
-        header('Location: hw6_second_page.php');
+        header('Location: login_signup.php');
         exit();
     }
 
@@ -93,7 +103,7 @@ _END;
 }
 else { // user not authenticated, redirect to second page
     $conn->close();
-    echo 'Please <a href="hw6_second_page.php">click here</a> to sign up/log in.';
+    echo 'Please <a href="login_signup.php">click here</a> to sign up/log in.';
 }
 
 $conn->close();
@@ -145,6 +155,6 @@ function different_user() {
     global $conn;
     destroy_session_and_data();
     $conn->close();
-    echo 'Techniacal error during signup/login. Please <a href="hw6_second_page.php">click here</a> to sign up/log in.';
+    echo 'Techniacal error during signup/login. Please <a href="login_signup.php">click here</a> to sign up/log in.';
 }
 ?>

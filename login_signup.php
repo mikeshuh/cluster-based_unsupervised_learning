@@ -5,70 +5,7 @@ require_once 'login.php';
 $conn = new mysqli($hn, $un, $pw, $db);
 if ($conn->connect_error) die($conn->connect_error);
 
-// webpage (sign up/login)
-echo <<<_END
-<html>
-<head>
-    <title>Sign Up / Log In</title>
-    <style>
-    .signup {
-        border:1px solid #999999; font: normal 14px helvetica; color: #444444;
-    }
-    </style>
-    <!-- JS client side form input validation -->
-    <script src='login_signup_validate.js'></script>
-    <script>
-        function validateSignUp(form) {
-            let fail = '';
-            fail += validateName(form.sName.value);
-            fail += validateStudentId(form.sStudentId.value);
-            fail += validateEmail(form.sEmail.value);
-            fail += validatePassword(form.sPassword.value);
-
-            if (fail == '') return true;
-            else { alert(fail); return false; }
-        }
-
-        function validateLogIn(form) {
-            let fail = '';
-            fail += validateStudentId(form.lStudentId.value);
-            fail += validatePassword(form.lPassword.value);
-
-            if (fail == '') return true;
-            else { alert(fail); return false; }
-        }
-    </script>
-</head>
-<body>
-    <!-- sign up -->
-    <form method="post" action="hw6_second_page.php" onsubmit="return validateSignUp(this)">
-        <table border="0" cellpadding="2" cellspacing="5" bgcolor="#eeeeee">
-            <th colspan="2" align="center">Sign Up</th>
-            <tr><td>Name</td>
-                <td><input type="text" maxlength="255" name="sName"></td></tr>
-            <tr><td>Student ID</td>
-                <td><input type="text" maxlength="9" name="sStudentId"></td></tr>
-            <tr><td>Email</td>
-                <td><input type="text" maxlength="255" name="sEmail"></td></tr>
-            <tr><td>Password</td>
-                <td><input type="password" maxlength="255" name="sPassword"></td></tr>
-            <tr><td colspan="2" align="center"><input type="submit" value="Sign Up"></td></tr>
-        </table>
-    </form>
-    <!-- log in -->
-    <form method="post" action="hw6_second_page.php" onsubmit="return validateLogIn(this)">
-        <table border="0" cellpadding="2" cellspacing="5" bgcolor="#eeeeee">
-            <th colspan="2" align="center">Log In</th>
-            <tr><td>Student ID</td>
-                <td><input type="text" maxlength="9" name="lStudentId"></td></tr>
-            <tr><td>Password</td>
-                <td><input type="password" maxlength="255" name="lPassword"></td></tr>
-            <tr><td colspan="2" align="center"><input type="submit" value="Log In"></td></tr>
-        </table>
-    </form>
-</body>
-</html>
-_END;
+echo file_get_contents('frontend/login_signup.html');
 
 // check sign up input
 if (isset($_POST['sName']) && isset($_POST['sStudentId']) && isset($_POST['sEmail']) && isset($_POST['sPassword'])) {
@@ -102,7 +39,7 @@ if (isset($_POST['sName']) && isset($_POST['sStudentId']) && isset($_POST['sEmai
             $conn->close();
 
             // redirect to first page
-            header('Location: hw6_first_page.php');
+            header('Location: dashboard.php');
             exit();
         }
     }
@@ -138,7 +75,7 @@ if (isset($_POST['lStudentId']) && isset($_POST['lPassword'])) {
         $conn->close();
 
         // redirect to first page
-        header('Location: hw6_first_page.php');
+        header('Location: dashboard.php');
         exit();
     }
     else echo '<script>alert("Incorrect Log In.");</script>';
