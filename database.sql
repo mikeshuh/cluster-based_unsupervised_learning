@@ -13,6 +13,6 @@ CREATE TABLE input_models (
     model_name VARCHAR(255) PRIMARY KEY NOT NULL,
     model_type VARCHAR(255) NOT NULL,
     username VARCHAR(255) NOT NULL,
-    datas LONGTEXT NOT NULL,
+    data LONGTEXT NOT NULL,
     FOREIGN KEY (username) REFERENCES user_accounts(username)
 );
