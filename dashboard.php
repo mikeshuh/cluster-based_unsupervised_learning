@@ -34,40 +34,12 @@ if (isset($_POST['logout'])) {
     exit();
 }
 
-// check seach advisor input
-if (isset($_POST['name']) && isset($_POST['studentId'])) {
-    // sanitize inputs
-    $name = sanitizeString($_POST['name']);
-    $studentId = sanitizeString($_POST['studentId']);
-
-    // no entry for name or student ID
-    if($name == '' || $studentId =='') echo 'Enter a Name and Student ID.';
-    // check if student exists
-    else if (searchStudent($name, $studentId)) { // student exists
-        // query for assocaited advisor
-        $advisorInfo = searchAdvisor($studentId);
-        
-        if (empty($advisorInfo)) { // no query results
-            echo 'No listed advisor.';
-        }
-        else { // output advisor info
-            echo <<<_END
-            <p>
-                <b><u>Advisor</u></b><br>
-                <b>Name: </b>$advisorInfo[0]<br>
-                <b>Email: </b>$advisorInfo[1]<br>
-                <b>Phone: </b>$advisorInfo[2]
-            </p>
-_END;
-        }
-    }
-    else echo 'No such student exists.';
-}
+$username = $_SESSION['username'];
 
 echo <<<_END
   <html>
   <head>
-    <title>Search Advisor</title>
+    <title>Dashboard</title>
     <style>
       .signup {
         border: 1px solid #999999;
@@ -79,58 +51,50 @@ echo <<<_END
   <body>
     <!-- log out -->
     <form action="dashboard.php" method="post">
-      <input type="submit" name="logout" value="Log Out" />
+      <input type="submit" name="logout" id="logout" value="Log Out" />
     </form>
+    <h1>Hello $username!</h1>
+    <h2>Train Model</h2>
     <!-- search advisor -->
-    <form method="post" action="dashboard.php">
-      <table border="0" cellpadding="2" cellspacing="5" bgcolor="#eeeeee">
-        <th colspan="2" align="center">Search Advisor</th>
-        <tr>
-          <td>Name</td>
-          <td><input type="text" maxlength="255" name="name" /></td>
-        </tr>
-        <tr>
-          <td>Student ID</td>
-          <td><input type="text" maxlength="9" name="studentId" /></td>
-        </tr>
-        <tr>
-          <td colspan="2" align="center">
-            <input type="submit" value="Search" />
-          </td>
-        </tr>
-      </table>
+    <form method="post" action="dashboard.php" enctype="multipart/form-data">
+      <b>Model Name: </b><input type="text" name="modelName" id="modelName"><br>
+      <b>Choose Algorithm: </b>
+      <select name="algo" id="algo"> 
+        <option value="kMeans">K-Means Clustering</option> 
+        <option value="eMax">Expectation Maximization</option> 
+      </select><br>
+      <b>Upload File or Text Box :</b>
+      <select name="inputType" id="inputType" onchange="showInput()"> 
+        <option value="none">Select...</option>
+        <option value="file">File Upload</option>
+        <option value="text">Text Box</option>
+      </select>
+      <div id="fileInput" style="display:none;">
+            <input type="file" name="file">
+        </div>
+        <div id="textInput" style="display:none;">
+            <textarea name="text" rows="4" cols="50"></textarea>
+        </div>
     </form>
+    <script>
+      function showInput() {
+        var inputType = document.getElementById("inputType").value;
+        var fileInput = document.getElementById("fileInput");
+        var textInput = document.getElementById("textInput");
+    
+        fileInput.style.display = (inputType === 'file') ? "block" : "none";
+        textInput.style.display = (inputType === 'text') ? "block" : "none";
+      }  
+    </script>
   </body>
   </html>
 _END;
 
 $conn->close();
 
-// query for associated advisor given studentID
-function searchAdvisor($studentId) {
-    global $conn;
-    $stmt = $conn->prepare('SELECT name, email, phone_number FROM advisors_info WHERE lower_bound_id <= ? AND upper_bound_id >= ?');
-    $stmt->bind_param('ii', $studentId, $studentId);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    return $result->fetch_array(MYSQLI_NUM);
-}
-
-// return if student exists in db given name and studentID
-function searchStudent($name, $studentId) {
-    global $conn;
-    $stmt = $conn->prepare('SELECT * FROM credentials WHERE name=? AND student_id=?');
-    $stmt->bind_param('si', $name, $studentId);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $exists = $result->num_rows > 0;
-    $stmt->close();
-    return $exists;
-}
-
 // authenticate user by checking if session var is set
 function authenticateUser() {
-    return isset($_SESSION['studentId']);
+    return isset($_SESSION['username']);
 }
 
 // sanatize strings
