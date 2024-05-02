@@ -5,7 +5,7 @@ require_once 'login.php';
 $conn = new mysqli($hn, $un, $pw, $db);
 if ($conn->connect_error) die($conn->connect_error);
 
-echo file_get_contents('frontend/login_signup.html');
+include('private_html/login_signup.html');
 
 // check sign up input
 if (isset($_POST['sUsername']) && isset($_POST['sEmail']) && isset($_POST['sPassword'])) {

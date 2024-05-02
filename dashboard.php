@@ -35,60 +35,8 @@ if (isset($_POST['logout'])) {
 }
 
 $username = $_SESSION['username'];
-
-echo <<<_END
-  <html>
-  <head>
-    <title>Dashboard</title>
-    <style>
-      .signup {
-        border: 1px solid #999999;
-        font: normal 14px helvetica;
-        color: #444444;
-      }
-    </style>
-  </head>
-  <body>
-    <!-- log out -->
-    <form action="dashboard.php" method="post">
-      <input type="submit" name="logout" id="logout" value="Log Out" />
-    </form>
-    <h1>Hello $username!</h1>
-    <h2>Train Model</h2>
-    <!-- search advisor -->
-    <form method="post" action="dashboard.php" enctype="multipart/form-data">
-      <b>Model Name: </b><input type="text" name="modelName" id="modelName"><br>
-      <b>Choose Algorithm: </b>
-      <select name="algo" id="algo"> 
-        <option value="kMeans">K-Means Clustering</option> 
-        <option value="eMax">Expectation Maximization</option> 
-      </select><br>
-      <b>Upload File or Text Box :</b>
-      <select name="inputType" id="inputType" onchange="showInput()"> 
-        <option value="none">Select...</option>
-        <option value="file">File Upload</option>
-        <option value="text">Text Box</option>
-      </select>
-      <div id="fileInput" style="display:none;">
-            <input type="file" name="file">
-        </div>
-        <div id="textInput" style="display:none;">
-            <textarea name="text" rows="4" cols="50"></textarea>
-        </div>
-    </form>
-    <script>
-      function showInput() {
-        var inputType = document.getElementById("inputType").value;
-        var fileInput = document.getElementById("fileInput");
-        var textInput = document.getElementById("textInput");
-    
-        fileInput.style.display = (inputType === 'file') ? "block" : "none";
-        textInput.style.display = (inputType === 'text') ? "block" : "none";
-      }  
-    </script>
-  </body>
-  </html>
-_END;
+echo "<h1>Hello $username!</h1>";
+include('private_html/dashboard.html');
 
 $conn->close();
 
