@@ -13,8 +13,8 @@ CREATE TABLE user_accounts (
 );
 
 CREATE TABLE input_models (
-    model_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    model_name VARCHAR(255) NOT NULL,
+    model_name VARCHAR(255) PRIMARY KEY NOT NULL,
+    model_type VARCHAR(255) NOT NULL,
     username VARCHAR(255) NOT NULL,
     FOREIGN KEY (username) REFERENCES user_accounts(username)
 );
