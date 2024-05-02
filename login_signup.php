@@ -5,7 +5,6 @@ require_once 'login.php';
 $conn = new mysqli($hn, $un, $pw, $db);
 if ($conn->connect_error) die($conn->connect_error);
 
-//serve login signup webpage
 echo file_get_contents('frontend/login_signup.html');
 
 // check sign up input
