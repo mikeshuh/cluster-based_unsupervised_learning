@@ -1,6 +1,6 @@
 <?php
     $hn = 'localhost:3306';
     $un = 'root';
-    $pw = '';
+    $pw = 'Origamiguy5!';
     $db = 'cluster';
 ?>

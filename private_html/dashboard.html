@@ -11,6 +11,20 @@
     </style>
   </head>
   <body>
+    <?php
+        require_once 'login.php';
+        $conn = new mysqli($hn, $un, $pw, $db);
+        if ($conn->connect_error) die($conn->connect_error);
+
+        session_start();
+        $username = $_SESSION['username'];
+        echo "<h1>Hello $username!</h1>";
+
+        $stmt = $conn->prepare('SELECT model_name FROM k_cluster WHERE username = ?');
+        $stmt->bind_param('s', $username);
+        $stmt->execute();
+        $result = $stmt->get_result();
+    ?>
     <form action="dashboard.php" method="post">
       <input type="submit" name="logout" id="logout" value="Log Out" />
     </form>
@@ -44,11 +58,20 @@
       <b>Select Model: </b>
       <select name="modelName" id="modelName">
         <option value="none">Select...</option>
+        <?php
+        while ($row = $result->fetch_assoc()) {
+            echo '<option value="' . htmlspecialchars($row['model_name']) . '">' . htmlspecialchars($row['model_name']) . '</option>';
+        }
+        ?>
       </select>
       <br />
       <input type="file" name="file" /><br />
       <input type="submit" value="Submit" />
     </form>
+    <?php
+        $stmt->close();
+        $conn->close(); 
+    ?>
     <script>
       function showInput() {
         var inputType = document.getElementById('inputType').value;

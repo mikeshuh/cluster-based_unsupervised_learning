@@ -34,8 +34,6 @@ if (isset($_POST['logout'])) {
     exit();
 }
 
-$username = $_SESSION['username'];
-echo "<h1>Hello $username!</h1>";
 include('private_html/dashboard.html');
 
 $conn->close();
