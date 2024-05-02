@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Dashboard</title>
+    <style>
+      .signup {
+        border: 1px solid #999999;
+        font: normal 14px helvetica;
+        color: #444444;
+      }
+    </style>
+  </head>
+  <body>
+    <form action="dashboard.php" method="post">
+      <input type="submit" name="logout" id="logout" value="Log Out" />
+    </form>
+    <h2>Train Model</h2>
+    <form method="post" action="dashboard.php" enctype="multipart/form-data">
+      <b>Model Name: </b
+      ><input type="text" name="modelName" id="modelName" /><br />
+      <b>Select Algorithm: </b>
+      <select name="algo" id="algo">
+        <option value="none">Select...</option>
+        <option value="kMeans">K-Means Clustering</option>
+        <option value="eMax">Expectation Maximization</option></select
+      ><br />
+      <b>Upload File or Text Box :</b>
+      <select name="inputType" id="inputType" onchange="showInput()">
+        <option value="none">Select...</option>
+        <option value="file">File Upload</option>
+        <option value="text">Text Box</option>
+      </select>
+      <br />
+      <div id="fileInput" style="display: none">
+        <input type="file" name="file" />
+      </div>
+      <div id="textInput" style="display: none">
+        <textarea name="text" rows="4" cols="50"></textarea>
+      </div>
+      <input type="submit" value="Submit" />
+    </form>
+    <h2>Test Model</h2>
+    <form action="dashboard.php" method="post">
+      <b>Select Model: </b>
+      <select name="modelName" id="modelName">
+        <option value="none">Select...</option>
+      </select>
+      <br />
+      <input type="file" name="file" /><br />
+      <input type="submit" value="Submit" />
+    </form>
+    <script>
+      function showInput() {
+        var inputType = document.getElementById('inputType').value;
+        var fileInput = document.getElementById('fileInput');
+        var textInput = document.getElementById('textInput');
+
+        fileInput.style.display = inputType === 'file' ? 'block' : 'none';
+        textInput.style.display = inputType === 'text' ? 'block' : 'none';
+      }
+    </script>
+  </body>
+</html>
