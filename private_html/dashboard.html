@@ -23,14 +23,16 @@
     </form>
     <h2>Train Model</h2>
     <form method="post" action="dashboard.php" enctype="multipart/form-data">
-      <b>Model Name: </b
-      ><input type="text" name="modelName" id="modelName" /><br />
+      <b>Model Name: </b>
+      <input type="text" name="modelName" id="modelName" /><br />
       <b>Select Algorithm: </b>
       <select name="algo" id="algo">
         <option value="none">Select...</option>
         <option value="kMeans">K-Means Clustering</option>
         <option value="eMax">Expectation Maximization</option></select
       ><br />
+      <b>Number of Clusters: </b>
+      <input type="number" name="numClusters" id="numClusters" /><br />
       <b>Upload File or Text Box: </b>
       <select name="inputType" id="inputType" onchange="showInput()">
         <option value="none">Select...</option>
