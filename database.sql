@@ -9,10 +9,10 @@ CREATE TABLE user_accounts (
     token VARCHAR(255) NOT NULL
 );
 
-CREATE TABLE input_models (
+CREATE TABLE k_cluster (
     model_name VARCHAR(255) PRIMARY KEY NOT NULL,
     model_type VARCHAR(255) NOT NULL,
     username VARCHAR(255) NOT NULL,
-    data LONGTEXT NOT NULL,
+    centroids VARCHAR(255) NOT NULL,
     FOREIGN KEY (username) REFERENCES user_accounts(username)
 );
