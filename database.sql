@@ -6,7 +6,7 @@ USE cluster;
 CREATE TABLE user_accounts (
     username VARCHAR(255) PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL
+    token VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE input_models (
