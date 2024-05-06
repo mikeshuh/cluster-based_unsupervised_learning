@@ -1,10 +1,10 @@
 function validateUsername(field)
 //only a-z,A-Z,0-9,_,-
     {
-        if (field == "") return "No Username was entered.\n"
+        if (field == '') return 'No Username was entered.\n'
         else if (/[^a-zA-Z0-9_-]/.test(field)) 
-            return "Only a-z, A-Z, 0-9, - and _ allowed in Usernames.\n"
-        return ""
+            return 'Only a-z, A-Z, 0-9, - and _ allowed in Usernames.\n'
+        return ''
     }
 
 function validateEmail(field) {
