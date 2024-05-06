@@ -22,7 +22,7 @@
       <input type="submit" name="logout" id="logout" value="Log Out" />
     </form>
     <h2>Train Model</h2>
-    <form method="post" action="dashboard.php" enctype="multipart/form-data">
+    <form method="post" action="dashboard.php" enctype="multipart/form-data" onsubmit="return validateTrainingForm(this)">
       <b>Model Name: </b>
       <input type="text" name="modelName" id="modelName" /><br />
       <b>Select Algorithm: </b>
@@ -41,7 +41,7 @@
       </select>
       <br />
       <div id="fileInput" style="display: none">
-        <input type="file" name="file" />
+        <input type="file" name="trainFile" id="trainFile" accept=".txt" />
       </div>
       <div id="textInput" style="display: none">
         <textarea name="text" rows="4" cols="50"></textarea>
@@ -49,9 +49,9 @@
       <input type="submit" value="Submit" />
     </form>
     <h2>Test Model</h2>
-    <form action="dashboard.php" method="post">
+    <form action="dashboard.php" method="post" onsubmit="return validateTestForm(this)">
       <b>Select Model: </b>
-      <select name="modelName" id="modelName">
+      <select name="selectedModel" id="selectedModel">
         <option value="none">Select...</option>
         <?php
         while ($row = $result->fetch_assoc()) {
@@ -60,22 +60,56 @@
         ?>
       </select>
       <br />
-      <input type="file" name="file" /><br />
+      <input type="file" name="testFile" id="'testFile" accept=".txt" /><br />
       <input type="submit" value="Submit" />
     </form>
     <?php
         $stmt->close();
-        $conn->close(); 
+        $conn->close();
     ?>
+    <script src="validate_dash_forms.js"></script>
     <script>
       function showInput() {
-        var inputType = document.getElementById('inputType').value;
-        var fileInput = document.getElementById('fileInput');
-        var textInput = document.getElementById('textInput');
-
+        let inputType = document.getElementById('inputType').value;
+        let fileInput = document.getElementById('fileInput');
+        let textInput = document.getElementById('textInput');
+    
         fileInput.style.display = inputType === 'file' ? 'block' : 'none';
         textInput.style.display = inputType === 'text' ? 'block' : 'none';
       }
-    </script>
+
+      function validateTrainingForm(form) {
+        let fail = '';
+        let inputType = form.inputType.value;
+        fail += validateModelName(form.modelName.value);
+        fail += validateAlgo(form.algo.value);
+        fail += validateNumClusters(form.numClusters.value);
+        fail += validateInputType(inputType);
+        if (inputType == 'file') {
+          fail += validateFileUpload(form.trainFile.files.length);
+        }
+        if (inputType == 'text') {
+          fail += validateTextInput(form.text.value);
+        }
+
+        if (fail == '') return true;
+        else {
+          alert(fail);
+          return false;
+        }
+      }
+    
+      function validateTestForm(form) {
+        let fail = '';
+        fail += validateModelSelect(form.selectedModel.value);
+        fail += validateFileUpload(form.testFile.files.length);
+    
+        if (fail == '') return true;
+        else {
+          alert(fail);
+          return false;
+        }
+      }
+    </script>    
   </body>
 </html>
