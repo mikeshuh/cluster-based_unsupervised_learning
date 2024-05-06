@@ -15,9 +15,9 @@ if (isset($_POST['sUsername']) && isset($_POST['sEmail']) && isset($_POST['sPass
     $email = sanitizeString($_POST['sEmail']);
     $password = $_POST['sPassword'];
 
-    // check if username exists
-    if (searchUsername($username)) { // username alr exists
-        echo '<script>alert("Username is already taken.");</script>';
+    // check if username or email exists
+    if (searchUsername($username) || searchEmail($email)) { // username or email alr exists
+        echo '<script>alert("Username or email is already taken.");</script>';
     } else { // username valid
         // server side form input validation
         if (validateUserData($username, $email, $password)) {
@@ -87,7 +87,20 @@ function searchUsername($username)
 {
     global $conn;
     $stmt = $conn->prepare('SELECT * FROM user_accounts WHERE username=?');
-    $stmt->bind_param('i', $username);
+    $stmt->bind_param('s', $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $exists = $result->num_rows > 0;
+    $stmt->close();
+    return $exists;
+}
+
+// return if email alr in db
+function searchEmail($email)
+{
+    global $conn;
+    $stmt = $conn->prepare('SELECT * FROM user_accounts WHERE email=?');
+    $stmt->bind_param('s', $email);
     $stmt->execute();
     $result = $stmt->get_result();
     $exists = $result->num_rows > 0;
