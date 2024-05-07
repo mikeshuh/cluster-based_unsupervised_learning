@@ -1,5 +1,6 @@
 <?php
 require_once 'login.php';
+require 'ml_algos/k_means.php';
 
 // connect to db
 $conn = new mysqli($hn, $un, $pw, $db);
@@ -34,6 +35,62 @@ if (isset($_POST['logout'])) {
   // redirect to second page
   header('Location: signup_login.php');
   exit();
+}
+
+$username = $_SESSION['username'];
+
+if (isset($_POST['modelName']) && isset($_POST['algo']) && isset($_POST['numClusters']) && isset($_POST['inputType'])) {
+  $modelName = sanitizeString($_POST['modelName']);
+  $algo = $_POST['algo'];
+  $numClusters = $_POST['numClusters'];
+  $inputType = $_POST['inputType'];
+
+  if ($inputType == 'file' && $_FILES['trainFile']['error'] === UPLOAD_ERR_NO_FILE) {
+    echo '<script>alert("Please select a file to upload.");</script>';
+  } elseif ($inputType == 'file' && $_FILES) {
+    $file = $_FILES['trainFile']['name'];
+    // Sanitize file name
+    $file = strtolower(preg_replace('[^A-Za-z0-9.]', '', $file));
+
+    // Ensure file type is txt
+    if ($_FILES['trainFile']['type'] == 'text/plain') {
+      // Move file from tmp location
+      move_uploaded_file($_FILES['trainFile']['tmp_name'], $file);
+
+      // Read all file contents
+      $content = file_get_contents($file);
+
+      if (validateDataSet($content)) {
+        $data = stringToNumbersArray($content);
+        if ($algo == 'kMeans') {
+          $centroids = kMeans($data, $numClusters);
+          insertDBKCluster($modelName, $algo, $username, $centroids);
+          echo '<script>alert("Model trained.");</script>';
+        }
+      } else {
+        echo '<script>alert("File contents must only consist of numbers separated by commas.");</script>';
+      }
+    } else {
+      echo '<script>alert("Invalid file. Must be a txt file.");</script>';
+    }
+  }
+
+  if ($inputType == 'text' && !isset($_POST['text'])) {
+    echo '<script>alert("Please enter text for training.");</script>';
+  } elseif ($inputType == 'text' && isset($_POST['text'])) {
+    $content = $_POST['text'];
+
+    if (validateDataSet($content)) {
+      $data = stringToNumbersArray($content);
+      if ($algo == 'kMeans') {
+        $centroids = kMeans($data, $numClusters);
+        insertDBKCluster($modelName, $algo, $username, $centroids);
+        echo '<script>alert("Model trained.");</script>';
+      }
+    } else {
+      echo '<script>alert("Text input must only consist of numbers separated by commas.");</script>';
+    }
+  }
 }
 
 include('private_html/dashboard.html');
@@ -76,4 +133,26 @@ function different_user()
       window.location.href = "./signup_login.php";
     </script>
 HTML;
+}
+
+function validateDataSet($content)
+{
+  $pattern = '/^\d+(,\d+)*$/';
+  return preg_match($pattern, $content) ? true : false;
+}
+
+function stringToNumbersArray($numbersString)
+{
+  $numberArray = explode(',', $numbersString);
+  $numberArray = array_map('intval', $numberArray);
+  return $numberArray;
+}
+
+function insertDBKCluster($modelName, $modelType, $username, $centroids)
+{
+  global $conn;
+  $stmt = $conn->prepare('INSERT INTO k_cluster VALUES (?, ?, ?, ?)');
+  $stmt->bind_param('ssss', $modelName, $modelType, $username, $centroids);
+  $stmt->execute();
+  $stmt->close();
 }
