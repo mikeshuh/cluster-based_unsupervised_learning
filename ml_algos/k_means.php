@@ -16,7 +16,7 @@ function kMeans($data, $k)
         $assignments = $newAssignments;
     }
 
-    return $centroids;
+    return implode(',', $centroids);
 }
 
 function initializeCentroids($data, $k)
