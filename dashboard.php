@@ -45,7 +45,9 @@ if (isset($_POST['modelName']) && isset($_POST['algo']) && isset($_POST['numClus
   $numClusters = $_POST['numClusters'];
   $inputType = $_POST['inputType'];
 
-  if ($inputType == 'file' && $_FILES['trainFile']['error'] === UPLOAD_ERR_NO_FILE) {
+  if (searchKClusterUserModel($username, $modelName)) {
+    echo '<script>alert("Model name already taken.");</script>';
+  } elseif ($inputType == 'file' && $_FILES['trainFile']['error'] === UPLOAD_ERR_NO_FILE) {
     echo '<script>alert("Please select a file to upload.");</script>';
   } elseif ($inputType == 'file' && $_FILES) {
     $file = $_FILES['trainFile']['name'];
@@ -155,4 +157,16 @@ function insertDBKCluster($modelName, $username, $centroids)
   $stmt->bind_param('sss', $modelName, $username, $centroids);
   $stmt->execute();
   $stmt->close();
+}
+
+function searchKClusterUserModel($username, $modelName)
+{
+  global $conn;
+  $stmt = $conn->prepare('SELECT * FROM k_cluster WHERE username=? AND model_name=?');
+  $stmt->bind_param('ss', $username, $modelName);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  $exists = $result->num_rows > 0;
+  $stmt->close();
+  return $exists;
 }
