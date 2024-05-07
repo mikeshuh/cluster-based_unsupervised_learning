@@ -11,7 +11,6 @@ CREATE TABLE user_accounts (
 
 CREATE TABLE k_cluster (
     model_name VARCHAR(255) NOT NULL,
-    model_type VARCHAR(255) NOT NULL,
     username VARCHAR(255) NOT NULL,
     centroids VARCHAR(255) NOT NULL,
     PRIMARY KEY (model_name, username),
