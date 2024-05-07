@@ -45,7 +45,7 @@ if (isset($_POST['modelName']) && isset($_POST['algo']) && isset($_POST['numClus
   $numClusters = $_POST['numClusters'];
   $inputType = $_POST['inputType'];
 
-  if (searchKClusterUserModel($username, $modelName)) {
+  if (searchUserModel($username, $modelName)) {
     echo '<script>alert("Model name already taken.");</script>';
   } elseif ($inputType == 'file' && $_FILES['trainFile']['error'] === UPLOAD_ERR_NO_FILE) {
     echo '<script>alert("Please select a file to upload.");</script>';
@@ -66,7 +66,7 @@ if (isset($_POST['modelName']) && isset($_POST['algo']) && isset($_POST['numClus
         $data = stringToNumbersArray($content);
         if ($algo == 'kMeans') {
           $centroids = kMeans($data, $numClusters);
-          insertDBKCluster($modelName, $username, $centroids);
+          insertDBKCluster($modelName, $username, $algo, $centroids);
           echo '<script>alert("Model trained.");</script>';
         }
       } else {
@@ -86,12 +86,56 @@ if (isset($_POST['modelName']) && isset($_POST['algo']) && isset($_POST['numClus
       $data = stringToNumbersArray($content);
       if ($algo == 'kMeans') {
         $centroids = kMeans($data, $numClusters);
-        insertDBKCluster($modelName, $username, $centroids);
+        insertDBKCluster($modelName, $username, $algo, $centroids);
         echo '<script>alert("Model trained.");</script>';
       }
     } else {
       echo '<script>alert("Text input must only consist of numbers separated by commas.");</script>';
     }
+  }
+}
+
+if (isset($_POST['selectedModel']) && $_FILES['testFile']['error'] === UPLOAD_ERR_NO_FILE) {
+  echo '<script>alert("Please select a file to upload.");</script>';
+} elseif (isset($_POST['selectedModel']) && $_FILES) {
+  $modelName = $_POST['selectedModel'];
+  $file = $_FILES['testFile']['name'];
+  // Sanitize file name
+  $file = strtolower(preg_replace('[^A-Za-z0-9.]', '', $file));
+
+  // Ensure file type is txt
+  if ($_FILES['testFile']['type'] == 'text/plain') {
+    // Move file from tmp location
+    move_uploaded_file($_FILES['testFile']['tmp_name'], $file);
+
+    // Read all file contents
+    $content = file_get_contents($file);
+
+    if (validateDataSet($content)) {
+      $data = stringToNumbersArray($content);
+      $algo = getUserModelType($username, $modelName);
+      if ($algo == 'kMeans') {
+        $centroids = getKClusterCentroids($username, $modelName);
+        $centroids = stringToNumbersArray($centroids);
+        $assignments = assignPoints($data, $centroids);
+        $clusters = groupPointsByCluster($data, $assignments, sizeof($centroids));
+
+        echo '<h1>Cluster Assignments:</h1>';
+        foreach ($clusters as $index => $cluster) {
+          echo '<b>Cluster ' . ($index + 1) . ': </b>';
+          if (!empty($cluster)) {
+            echo implode(', ', $cluster);
+          } else {
+            echo 'No data points';
+          }
+          echo '<br>';
+        }
+      }
+    } else {
+      echo '<script>alert("File contents must only consist of numbers separated by commas.");</script>';
+    }
+  } else {
+    echo '<script>alert("Invalid file. Must be a txt file.");</script>';
   }
 }
 
@@ -150,23 +194,65 @@ function stringToNumbersArray($numbersString)
   return $numberArray;
 }
 
-function insertDBKCluster($modelName, $username, $centroids)
+function insertDBKCluster($modelName, $username, $modelType, $centroids)
 {
   global $conn;
-  $stmt = $conn->prepare('INSERT INTO k_cluster VALUES (?, ?, ?)');
+  $stmt = $conn->prepare('INSERT INTO user_models VALUES (?, ?, ?)');
+  $stmt->bind_param('sss', $modelName, $username, $modelType);
+  $stmt->execute();
+  $stmt->close();
+
+  $stmt = $conn->prepare('INSERT INTO k_means VALUES (?, ?, ?)');
   $stmt->bind_param('sss', $modelName, $username, $centroids);
   $stmt->execute();
   $stmt->close();
 }
 
-function searchKClusterUserModel($username, $modelName)
+function searchUserModel($username, $modelName)
 {
   global $conn;
-  $stmt = $conn->prepare('SELECT * FROM k_cluster WHERE username=? AND model_name=?');
+  $stmt = $conn->prepare('SELECT * FROM user_models WHERE username=? AND model_name=?');
   $stmt->bind_param('ss', $username, $modelName);
   $stmt->execute();
   $result = $stmt->get_result();
   $exists = $result->num_rows > 0;
   $stmt->close();
   return $exists;
+}
+
+function getUserModelType($username, $modelName)
+{
+  global $conn;
+  $stmt = $conn->prepare('SELECT model_type FROM user_models WHERE username=? AND model_name=?');
+  $stmt->bind_param('ss', $username, $modelName);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  $row = $result->fetch_assoc();
+  $stmt->close();
+  return $row['model_type'];
+}
+
+
+function getKClusterCentroids($username, $modelName)
+{
+  global $conn;
+  $stmt = $conn->prepare('SELECT centroids FROM k_means WHERE username=? AND model_name=?');
+  $stmt->bind_param('ss', $username, $modelName);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  $row = $result->fetch_assoc();
+  $stmt->close();
+  return $row['centroids'];
+}
+
+function groupPointsByCluster($data, $assignments, $numClusters)
+{
+  $clusters = [];
+  for ($i = 0; $i < $numClusters; $i++) {
+    $clusters[$i] = [];
+  }
+  foreach ($assignments as $index => $clusterIndex) {
+    $clusters[$clusterIndex][] = $data[$index];
+  }
+  return $clusters;
 }
