@@ -64,7 +64,7 @@ if (isset($_POST['modelName']) && isset($_POST['algo']) && isset($_POST['numClus
         $data = stringToNumbersArray($content);
         if ($algo == 'kMeans') {
           $centroids = kMeans($data, $numClusters);
-          insertDBKCluster($modelName, $algo, $username, $centroids);
+          insertDBKCluster($modelName, $username, $centroids);
           echo '<script>alert("Model trained.");</script>';
         }
       } else {
@@ -84,7 +84,7 @@ if (isset($_POST['modelName']) && isset($_POST['algo']) && isset($_POST['numClus
       $data = stringToNumbersArray($content);
       if ($algo == 'kMeans') {
         $centroids = kMeans($data, $numClusters);
-        insertDBKCluster($modelName, $algo, $username, $centroids);
+        insertDBKCluster($modelName, $username, $centroids);
         echo '<script>alert("Model trained.");</script>';
       }
     } else {
@@ -148,11 +148,11 @@ function stringToNumbersArray($numbersString)
   return $numberArray;
 }
 
-function insertDBKCluster($modelName, $modelType, $username, $centroids)
+function insertDBKCluster($modelName, $username, $centroids)
 {
   global $conn;
-  $stmt = $conn->prepare('INSERT INTO k_cluster VALUES (?, ?, ?, ?)');
-  $stmt->bind_param('ssss', $modelName, $modelType, $username, $centroids);
+  $stmt = $conn->prepare('INSERT INTO k_cluster VALUES (?, ?, ?)');
+  $stmt->bind_param('sss', $modelName, $username, $centroids);
   $stmt->execute();
   $stmt->close();
 }
