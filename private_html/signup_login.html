@@ -4,12 +4,7 @@
     <title>Sign Up / Log In</title>
   </head>
   <body>
-    <!-- sign up -->
-    <form
-      method="post"
-      action="signup_login.php"
-      onsubmit="return validateSignUp(this)"
-    >
+    <form method="post" action="signup_login.php" onsubmit="return validateSignUp(this)">
       <table border="0" cellpadding="2" cellspacing="5" bgcolor="#eeeeee">
         <th colspan="2" align="center">Sign Up</th>
         <tr>
@@ -31,18 +26,13 @@
         </tr>
       </table>
     </form>
-    <br />
-    <!-- log in -->
-    <form
-      method="post"
-      action="signup_login.php"
-      onsubmit="return validateLogIn(this)"
-    >
+    <br>
+    <form method="post" action="signup_login.php" onsubmit="return validateLogIn(this)">
       <table border="0" cellpadding="2" cellspacing="5" bgcolor="#eeeeee">
         <th colspan="2" align="center">Log In</th>
         <tr>
           <td>Username</td>
-          <td><input type="text" maxlength="9" name="lUsername" /></td>
+          <td><input type="text" maxlength="255" name="lUsername" /></td>
         </tr>
         <tr>
           <td>Password</td>
@@ -55,7 +45,6 @@
         </tr>
       </table>
     </form>
-    <!-- JS client side form input validation -->
     <script src="client_side_validation/validate_signup_login.js"></script>
     <script>
       function validateSignUp(form) {

@@ -1,5 +1,3 @@
-
--- creating database for the project
 CREATE DATABASE cluster; 
 USE cluster;
 
