@@ -22,7 +22,7 @@ function kMeans($data, $k)
     }
 
     // Return centroids as a comma-separated string
-    return implode(',', $centroids);
+    return $centroids;
 }
 
 function initializeCentroids($data, $k)

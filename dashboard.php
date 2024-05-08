@@ -79,8 +79,8 @@ if (isset($_POST['modelName']) && isset($_POST['algo']) && isset($_POST['numClus
 
           // which clustering algo to use
           if ($algo == 'kMeans') {
-            // get centriods of data set
-            $centroids = kMeans($data, $numClusters);
+            $centroids = kMeans($data, $numClusters); // get centriods of data set
+            $centroids = implode(',', $centroids); // convert num array to string
 
             // insert trained model to db
             insertDBKCluster($modelName, $username, $algo, $centroids);
@@ -105,8 +105,8 @@ if (isset($_POST['modelName']) && isset($_POST['algo']) && isset($_POST['numClus
 
         // which clustering algo to use
         if ($algo == 'kMeans') {
-          // get centriods of data set
-          $centroids = kMeans($data, $numClusters);
+          $centroids = kMeans($data, $numClusters); // get centriods of data set
+          $centroids = implode(',', $centroids); // convert num array to string
 
           // insert trained model to db
           insertDBKCluster($modelName, $username, $algo, $centroids);
@@ -118,54 +118,56 @@ if (isset($_POST['modelName']) && isset($_POST['algo']) && isset($_POST['numClus
 }
 
 // check test model form
-if (isset($_POST['selectedModel']) && $_FILES['testFile']['error'] === UPLOAD_ERR_NO_FILE) { // if model selected but no file uploaded
-  echo '<script>alert("Please select a file to upload.");</script>';
-} elseif (isset($_POST['selectedModel']) && $_FILES) { // if model selected and file uploaded
-  $modelName = $_POST['selectedModel'];
-  $file = $_FILES['testFile']['name'];
+if (isset($_POST['selectedModel'])) { // if model selected
+  if ($_FILES['testFile']['error'] === UPLOAD_ERR_NO_FILE) { // if no file uploaded
+    echo '<script>alert("Please select a file to upload.");</script>';
+  } elseif ($_FILES) { // if file uploaded
+    $modelName = $_POST['selectedModel'];
+    $file = $_FILES['testFile']['name'];
 
-  // sanitize file name
-  $file = strtolower(preg_replace('[^A-Za-z0-9.]', '', $file));
+    // sanitize file name
+    $file = strtolower(preg_replace('[^A-Za-z0-9.]', '', $file));
 
-  // ensure file type is txt
-  if ($_FILES['testFile']['type'] == 'text/plain') {
-    // move file from tmp location
-    move_uploaded_file($_FILES['testFile']['tmp_name'], $file);
+    // ensure file type is txt
+    if ($_FILES['testFile']['type'] == 'text/plain') {
+      // move file from tmp location
+      move_uploaded_file($_FILES['testFile']['tmp_name'], $file);
 
-    // read all file contents
-    $content = file_get_contents($file);
+      // read all file contents
+      $content = file_get_contents($file);
 
-    // validate file content
-    if (validateDataSet($content)) {
-      $data = stringToNumbersArray($content); // convert data string to num array
-      $algo = getUserModelType($username, $modelName); // get type of user model (kMeans or EM)
-      sort($data); // sort data asc
+      // validate file content
+      if (validateDataSet($content)) {
+        $data = stringToNumbersArray($content); // convert data string to num array
+        $algo = getUserModelType($username, $modelName); // get type of user model (kMeans or EM)
+        sort($data); // sort data asc
 
-      // which clustering algo to test
-      if ($algo == 'kMeans') {
-        $centroids = getKClusterCentroids($username, $modelName); // get centroids of model
-        $centroids = stringToNumbersArray($centroids); // convert centriod string to num array
-        $assignments = assignPoints($data, $centroids); // assign data to centriods
-        $clusters = groupPointsByCluster($data, $assignments, sizeof($centroids)); // group data by centriods
+        // which clustering algo to test
+        if ($algo == 'kMeans') {
+          $centroids = getKClusterCentroids($username, $modelName); // get centroids of model
+          $centroids = stringToNumbersArray($centroids); // convert centriod string to num array
+          $assignments = assignPoints($data, $centroids); // assign data to centriods
+          $clusters = groupPointsByCluster($data, $assignments, sizeof($centroids)); // group data by centriods
 
-        // display cluster lists
-        echo '<h1>Cluster Assignments:</h1>';
-        foreach ($clusters as $index => $cluster) {
-          echo '<b>C ' . ($index + 1) . ': </b>';
-          if (!empty($cluster)) {
-            echo implode(', ', $cluster);
-          } else {
-            echo 'No data points';
+          // display cluster lists
+          echo '<h1>Cluster Assignments:</h1>';
+          foreach ($clusters as $index => $cluster) {
+            echo '<b>C' . ($index + 1) . ': </b>';
+            if (!empty($cluster)) {
+              echo implode(', ', $cluster);
+            } else {
+              echo 'No data points';
+            }
+            echo '<br>';
           }
-          echo '<br>';
         }
-      }
-      /*
-        INSERT EM ALGO PATH
-      */
-    } else echo '<script>alert("File contents must only consist of numbers separated by commas.");</script>'; // invalid file content
-  } else echo '<script>alert("Invalid file. Must be a txt file.");</script>'; // invalid file. not txt
-} else echo '<script>alert("Error occured. Unable to test model.");</script>'; // some other error
+        /*
+          INSERT EM ALGO PATH
+        */
+      } else echo '<script>alert("File contents must only consist of numbers separated by commas.");</script>'; // invalid file content
+    } else echo '<script>alert("Invalid file. Must be a txt file.");</script>'; // invalid file. not txt
+  }
+}
 
 // include webpage
 include('private_html/dashboard.html');
