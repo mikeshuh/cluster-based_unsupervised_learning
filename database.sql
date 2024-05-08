@@ -22,3 +22,13 @@ CREATE TABLE k_means (
     PRIMARY KEY (model_name, username),
     FOREIGN KEY (model_name, username) REFERENCES user_models(model_name, username)
 );
+
+CREATE TABLE e_max (
+    model_name VARCHAR(255) NOT NULL,
+    username VARCHAR(255) NOT NULL,
+    means VARCHAR(255) NOT NULL,
+    variances VARCHAR(255) NOT NULL,
+    mixing_coeffs VARCHAR(255) NOT NULL,
+    PRIMARY KEY (model_name, username),
+    FOREIGN KEY (model_name, username) REFERENCES user_models(model_name, username)
+);
