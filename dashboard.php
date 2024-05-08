@@ -1,6 +1,7 @@
 <?php
 require_once 'login.php';
 require 'ml_algos/k_means.php';
+require 'ml_algos/e_max.php';
 
 // connect to db
 $conn = new mysqli($hn, $un, $pw, $db);
@@ -86,9 +87,18 @@ if (isset($_POST['modelName']) && isset($_POST['algo']) && isset($_POST['numClus
             insertDBKCluster($modelName, $username, $algo, $centroids);
             echo '<script>alert("Model trained.");</script>';
           }
-          /*
-            INSERT EM ALGO PATH
-          */
+          if ($algo == 'eMax') {
+            $clusters = emAlgorithm($data, $numClusters); // get cluster properties
+
+            // convert num arrays to strings
+            $means = implode(',', $clusters['means']);
+            $variances = implode(',', $clusters['variances']);
+            $mixingCoefficients = implode(',', $clusters['mixingCoefficients']);
+
+            // insert trained model to db
+            insertDBEM($modelName, $username, $algo, $means, $variances, $mixingCoefficients);
+            echo '<script>alert("Model trained.");</script>';
+          }
         } else echo '<script>alert("File contents must only consist of numbers separated by commas.");</script>'; // invalid file content
       } else echo '<script>alert("Invalid file. Must be a txt file.");</script>'; // invalid file. not txt
     }
@@ -110,6 +120,18 @@ if (isset($_POST['modelName']) && isset($_POST['algo']) && isset($_POST['numClus
 
           // insert trained model to db
           insertDBKCluster($modelName, $username, $algo, $centroids);
+          echo '<script>alert("Model trained.");</script>';
+        }
+        if ($algo == 'eMax') {
+          $clusters = emAlgorithm($data, $numClusters); // get cluster properties
+
+          // convert num arrays to strings
+          $means = implode(',', $clusters['means']);
+          $variances = implode(',', $clusters['variances']);
+          $mixingCoefficients = implode(',', $clusters['mixingCoefficients']);
+
+          // insert trained model to db
+          insertDBEM($modelName, $username, $algo, $means, $variances, $mixingCoefficients);
           echo '<script>alert("Model trained.");</script>';
         }
       } else echo '<script>alert("Text input must only consist of numbers separated by commas.");</script>'; // invalid text content
@@ -150,20 +172,46 @@ if (isset($_POST['selectedModel'])) { // if model selected
           $clusters = groupPointsByCluster($data, $assignments, sizeof($centroids)); // group data by centriods
 
           // display cluster lists
-          echo '<h1>Cluster Assignments:</h1>';
+          echo '<h1>K-Means Cluster Assignments</h1>';
           foreach ($clusters as $index => $cluster) {
-            echo '<b>C' . ($index + 1) . ': </b>';
+            echo '<b>Cluster ' . ($index + 1) . ':</b><br><i>Centroid: ' . $centroids[$index] . '</i><br>Scores: ';
             if (!empty($cluster)) {
               echo implode(', ', $cluster);
             } else {
               echo 'No data points';
             }
+            echo '<br><br>';
+          }
+        }
+        if ($algo == 'eMax') {
+          $clusters = getEMaxClusterProperties($username, $modelName);
+
+          echo '<h1>Expectation Maximization</h1>';
+          echo '<h2>Cluster Properties</h2>';
+          for ($i = 0; $i < count($clusters[0]); ++$i) {
+            echo '<b>Cluster ' . ($i + 1) . ':</b><br>';
+            for ($j = 0; $j < 3; ++$j) {
+              if ($j == 0) echo '<i>Mean: ' . $clusters[$j][$i] . '</i><br>';
+              if ($j == 1) echo '<i>Variance: ' . $clusters[$j][$i] . '</i><br>';
+              if ($j == 2) echo '<i>Mixing Coefficient: ' . $clusters[$j][$i] . '</i><br>';
+            }
+            echo '<br>';
+          }
+
+          echo '<h2>Score Cluster Probabilities</h2>';
+          $means = $clusters[0];
+          $variances = $clusters[1];
+          $mixingCoeffs = $clusters[2];
+
+          $res = calculateClusterProbabilities($data, $means, $variances, $mixingCoeffs);
+          foreach ($res as $dataProbs) {
+            echo '<b>Score: ' . $dataProbs['dataPoint'] . '</b><br>';
+            foreach ($dataProbs['probabilities'] as $cluster => $prob) {
+              echo 'Cluster ' . ($cluster + 1) . ': ' . round($prob * 100, 2) . '%<br>';
+            }
             echo '<br>';
           }
         }
-        /*
-          INSERT EM ALGO PATH
-        */
       } else echo '<script>alert("File contents must only consist of numbers separated by commas.");</script>'; // invalid file content
     } else echo '<script>alert("Invalid file. Must be a txt file.");</script>'; // invalid file. not txt
   }
@@ -224,7 +272,7 @@ function validateDataSet($content)
 function stringToNumbersArray($numbersString)
 {
   $numberArray = explode(',', $numbersString);
-  $numberArray = array_map('intval', $numberArray);
+  $numberArray = array_map('floatval', $numberArray);
   return $numberArray;
 }
 
@@ -239,6 +287,20 @@ function insertDBKCluster($modelName, $username, $modelType, $centroids)
 
   $stmt = $conn->prepare('INSERT INTO k_means VALUES (?, ?, ?)');
   $stmt->bind_param('sss', $modelName, $username, $centroids);
+  $stmt->execute();
+  $stmt->close();
+}
+
+function insertDBEM($modelName, $username, $modelType, $means, $variances, $mixingCoeffs)
+{
+  global $conn;
+  $stmt = $conn->prepare('INSERT INTO user_models VALUES (?, ?, ?)');
+  $stmt->bind_param('sss', $modelName, $username, $modelType);
+  $stmt->execute();
+  $stmt->close();
+
+  $stmt = $conn->prepare('INSERT INTO e_max VALUES (?, ?, ?, ?, ?)');
+  $stmt->bind_param('sssss', $modelName, $username, $means, $variances, $mixingCoeffs);
   $stmt->execute();
   $stmt->close();
 }
@@ -280,6 +342,22 @@ function getKClusterCentroids($username, $modelName)
   $row = $result->fetch_assoc();
   $stmt->close();
   return $row['centroids'];
+}
+
+function getEMaxClusterProperties($username, $modelName)
+{
+  global $conn;
+  $stmt = $conn->prepare('SELECT * FROM e_max WHERE username=? AND model_name=?');
+  $stmt->bind_param('ss', $username, $modelName);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  $row = $result->fetch_assoc();
+  $stmt->close();
+
+  $means = stringToNumbersArray($row['means']);
+  $variances = stringToNumbersArray($row['variances']);
+  $mixingCoeffs = stringToNumbersArray($row['mixing_coeffs']);
+  return [$means, $variances, $mixingCoeffs];
 }
 
 // turn data assignments into clusters containing all the assigned data points
