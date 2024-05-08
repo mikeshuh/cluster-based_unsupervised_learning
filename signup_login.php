@@ -5,10 +5,7 @@ require_once 'login.php';
 $conn = new mysqli($hn, $un, $pw, $db);
 if ($conn->connect_error) die($conn->connect_error);
 
-// include webpage
-include('private_html/signup_login.html');
-
-// check sign up input
+// check sign up form
 if (isset($_POST['sUsername']) && isset($_POST['sEmail']) && isset($_POST['sPassword'])) {
     // sanitize inputs
     $username = sanitizeString($_POST['sUsername']);
@@ -18,20 +15,22 @@ if (isset($_POST['sUsername']) && isset($_POST['sEmail']) && isset($_POST['sPass
     // check if username or email exists
     if (searchUsername($username) || searchEmail($email)) { // username or email alr exists
         echo '<script>alert("Username or email is already taken.");</script>';
-    } else { // username valid
-        // server side form input validation
+    } else { // username and email valid
+        // server side input validation
         if (validateUserData($username, $email, $password)) {
-            // get token with hash
+            // hash password to get token. auto salting
             $token = password_hash($password, PASSWORD_DEFAULT);
 
-            // add to db
-            insertDB($username, $email, $token);
+            // insert user to db
+            insertUserDB($username, $email, $token);
 
-            // start session, set session vars
+            // start session and set session vars
             session_start();
             $_SESSION['initiated'] = true;
             $_SESSION['check'] = hash('ripemd128', $_SERVER['REMOTE_ADDR'] . $_SERVER['HTTP_USER_AGENT']);
             $_SESSION['username'] = $username;
+
+            // close db conn
             $conn->close();
 
             // direct to dashboard page
@@ -41,9 +40,9 @@ if (isset($_POST['sUsername']) && isset($_POST['sEmail']) && isset($_POST['sPass
     }
 }
 
-// check log in input
+// check log in form
 if (isset($_POST['lUsername']) && isset($_POST['lPassword'])) {
-    //sanitize inputs
+    // sanitize inputs
     $username = sanitizeString($_POST['lUsername']);
     $password = $_POST['lPassword'];
 
@@ -55,25 +54,31 @@ if (isset($_POST['lUsername']) && isset($_POST['lPassword'])) {
     $row = $result->fetch_array(MYSQLI_NUM);
     $stmt->close();
 
-    // check password
+    // verify password
     if (password_verify($password, $row[2])) { // if tokens match
         // start session, set session vars
         session_start();
         $_SESSION['initiated'] = true;
         $_SESSION['check'] = hash('ripemd128', $_SERVER['REMOTE_ADDR'] . $_SERVER['HTTP_USER_AGENT']);
         $_SESSION['username'] = $username;
+
+        // close db conn
         $conn->close();
 
         // direct to dashboard page
         header('Location: dashboard.php');
         exit();
-    } else echo '<script>alert("Incorrect Log In.");</script>';
+    } else echo '<script>alert("Incorrect Log In.");</script>'; // tokens don't match
 }
 
+// include webpage
+include('private_html/signup_login.html');
+
+// close db conn
 $conn->close();
 
-// add to db function
-function insertDB($username, $email, $token)
+// add user to db
+function insertUserDB($username, $email, $token)
 {
     global $conn;
     $stmt = $conn->prepare('INSERT INTO user_accounts VALUES (?, ?, ?)');
@@ -82,7 +87,7 @@ function insertDB($username, $email, $token)
     $stmt->close();
 }
 
-// return if username alr in db
+// return boolean on if username alr exists
 function searchUsername($username)
 {
     global $conn;
@@ -95,7 +100,7 @@ function searchUsername($username)
     return $exists;
 }
 
-// return if email alr in db
+// return boolean on if email alr exists
 function searchEmail($email)
 {
     global $conn;
@@ -111,17 +116,17 @@ function searchEmail($email)
 // server side form input validation
 function validateUserData($username, $email, $password)
 {
-    // Validate Username
+    // validate username
     if ($username === '' || preg_match('/[^a-zA-Z0-9_-]/', $username)) {
         echo '<script>alert("Invalid Username");</script>';
         return false;
     }
-    // Validate Email
+    // validate email
     if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         echo '<script>alert("Invalid Email");</script>';
         return false;
     }
-    // Validate Password
+    // validate password
     if ($password === '' || strlen($password) < 8 || !preg_match('/[a-z]/', $password) || !preg_match('/[A-Z]/', $password) || !preg_match('/[0-9]/', $password)) {
         echo '<script>alert("Invalid Password");</script>';
         return false;

@@ -24,7 +24,7 @@
     <h2>Train Model</h2>
     <form method="post" action="dashboard.php" enctype="multipart/form-data" onsubmit="return validateTrainingForm(this)">
       <b>Model Name: </b>
-      <input type="text" name="modelName" id="modelName" />
+      <input type="text" name="modelName" id="modelName" maxlength="255" />
       <br>
       <b>Select Algorithm: </b>
       <select name="algo" id="algo">
