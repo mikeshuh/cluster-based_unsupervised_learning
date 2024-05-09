@@ -276,35 +276,6 @@ function stringToNumbersArray($numbersString)
   return $numberArray;
 }
 
-// add k means model to db
-function insertDBKCluster($modelName, $username, $modelType, $centroids)
-{
-  global $conn;
-  $stmt = $conn->prepare('INSERT INTO user_models VALUES (?, ?, ?)');
-  $stmt->bind_param('sss', $modelName, $username, $modelType);
-  $stmt->execute();
-  $stmt->close();
-
-  $stmt = $conn->prepare('INSERT INTO k_means VALUES (?, ?, ?)');
-  $stmt->bind_param('sss', $modelName, $username, $centroids);
-  $stmt->execute();
-  $stmt->close();
-}
-
-function insertDBEM($modelName, $username, $modelType, $means, $variances, $mixingCoeffs)
-{
-  global $conn;
-  $stmt = $conn->prepare('INSERT INTO user_models VALUES (?, ?, ?)');
-  $stmt->bind_param('sss', $modelName, $username, $modelType);
-  $stmt->execute();
-  $stmt->close();
-
-  $stmt = $conn->prepare('INSERT INTO e_max VALUES (?, ?, ?, ?, ?)');
-  $stmt->bind_param('sssss', $modelName, $username, $means, $variances, $mixingCoeffs);
-  $stmt->execute();
-  $stmt->close();
-}
-
 // return boolean on if user model alr exists
 function searchUserModel($username, $modelName)
 {
@@ -329,46 +300,4 @@ function getUserModelType($username, $modelName)
   $row = $result->fetch_assoc();
   $stmt->close();
   return $row['model_type'];
-}
-
-// return centriod string of user model
-function getKClusterCentroids($username, $modelName)
-{
-  global $conn;
-  $stmt = $conn->prepare('SELECT centroids FROM k_means WHERE username=? AND model_name=?');
-  $stmt->bind_param('ss', $username, $modelName);
-  $stmt->execute();
-  $result = $stmt->get_result();
-  $row = $result->fetch_assoc();
-  $stmt->close();
-  return $row['centroids'];
-}
-
-function getEMaxClusterProperties($username, $modelName)
-{
-  global $conn;
-  $stmt = $conn->prepare('SELECT * FROM e_max WHERE username=? AND model_name=?');
-  $stmt->bind_param('ss', $username, $modelName);
-  $stmt->execute();
-  $result = $stmt->get_result();
-  $row = $result->fetch_assoc();
-  $stmt->close();
-
-  $means = stringToNumbersArray($row['means']);
-  $variances = stringToNumbersArray($row['variances']);
-  $mixingCoeffs = stringToNumbersArray($row['mixing_coeffs']);
-  return [$means, $variances, $mixingCoeffs];
-}
-
-// turn data assignments into clusters containing all the assigned data points
-function groupPointsByCluster($data, $assignments, $numClusters)
-{
-  $clusters = [];
-  for ($i = 0; $i < $numClusters; $i++) {
-    $clusters[$i] = [];
-  }
-  foreach ($assignments as $index => $clusterIndex) {
-    $clusters[$clusterIndex][] = $data[$index];
-  }
-  return $clusters;
 }

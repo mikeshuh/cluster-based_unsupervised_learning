@@ -1,9 +1,8 @@
 <?php
-
 function emAlgorithm($data, $k, $epsilon = 0.001, $maxIterations = 100)
 {
     // Step 1: Improved Initialization
-    list($means, $variances, $mixingCoefficients) = improvedInitializeParameters($data, $k);
+    list($means, $variances, $mixingCoefficients) = initializeParameters($data, $k);
 
     $previousMeans = $means;
     for ($iteration = 0; $iteration < $maxIterations; $iteration++) {
@@ -36,7 +35,7 @@ function emAlgorithm($data, $k, $epsilon = 0.001, $maxIterations = 100)
     ];
 }
 
-function improvedInitializeParameters($data, $k)
+function initializeParameters($data, $k)
 {
     $min = min($data);
     $max = max($data);
@@ -44,7 +43,6 @@ function improvedInitializeParameters($data, $k)
     $variances = [];
     $mixingCoefficients = [];
 
-    // Improved initialization
     $spread = ($max - $min) / ($k + 1);
     for ($i = 1; $i <= $k; $i++) {
         $means[] = $min + $i * $spread;
@@ -140,4 +138,35 @@ function calculateClusterProbabilities($newData, $means, $variances, $mixingCoef
     }
 
     return $results;
+}
+
+function getEMaxClusterProperties($username, $modelName)
+{
+    global $conn;
+    $stmt = $conn->prepare('SELECT * FROM e_max WHERE username=? AND model_name=?');
+    $stmt->bind_param('ss', $username, $modelName);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $stmt->close();
+
+    $means = stringToNumbersArray($row['means']);
+    $variances = stringToNumbersArray($row['variances']);
+    $mixingCoeffs = stringToNumbersArray($row['mixing_coeffs']);
+    return [$means, $variances, $mixingCoeffs];
+}
+
+// add EM model to db
+function insertDBEM($modelName, $username, $modelType, $means, $variances, $mixingCoeffs)
+{
+    global $conn;
+    $stmt = $conn->prepare('INSERT INTO user_models VALUES (?, ?, ?)');
+    $stmt->bind_param('sss', $modelName, $username, $modelType);
+    $stmt->execute();
+    $stmt->close();
+
+    $stmt = $conn->prepare('INSERT INTO e_max VALUES (?, ?, ?, ?, ?)');
+    $stmt->bind_param('sssss', $modelName, $username, $means, $variances, $mixingCoeffs);
+    $stmt->execute();
+    $stmt->close();
 }
