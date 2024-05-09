@@ -88,3 +88,44 @@ function recalculateCentroids($data, $assignments, $k)
 
     return $centroids;
 }
+
+// turn data assignments into clusters containing all the assigned data points
+function groupPointsByCluster($data, $assignments, $numClusters)
+{
+    $clusters = [];
+    for ($i = 0; $i < $numClusters; $i++) {
+        $clusters[$i] = [];
+    }
+    foreach ($assignments as $index => $clusterIndex) {
+        $clusters[$clusterIndex][] = $data[$index];
+    }
+    return $clusters;
+}
+
+// return centriod string of user model
+function getKClusterCentroids($username, $modelName)
+{
+    global $conn;
+    $stmt = $conn->prepare('SELECT centroids FROM k_means WHERE username=? AND model_name=?');
+    $stmt->bind_param('ss', $username, $modelName);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $stmt->close();
+    return $row['centroids'];
+}
+
+// add k means model to db
+function insertDBKCluster($modelName, $username, $modelType, $centroids)
+{
+    global $conn;
+    $stmt = $conn->prepare('INSERT INTO user_models VALUES (?, ?, ?)');
+    $stmt->bind_param('sss', $modelName, $username, $modelType);
+    $stmt->execute();
+    $stmt->close();
+
+    $stmt = $conn->prepare('INSERT INTO k_means VALUES (?, ?, ?)');
+    $stmt->bind_param('sss', $modelName, $username, $centroids);
+    $stmt->execute();
+    $stmt->close();
+}

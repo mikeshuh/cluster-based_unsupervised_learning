@@ -54,21 +54,23 @@ if (isset($_POST['lUsername']) && isset($_POST['lPassword'])) {
     $row = $result->fetch_array(MYSQLI_NUM);
     $stmt->close();
 
-    // verify password
-    if (password_verify($password, $row[2])) { // if tokens match
-        // start session, set session vars
-        session_start();
-        $_SESSION['initiated'] = true;
-        $_SESSION['check'] = hash('ripemd128', $_SERVER['REMOTE_ADDR'] . $_SERVER['HTTP_USER_AGENT']);
-        $_SESSION['username'] = $username;
+    if ($result->num_rows > 0) { // check if user exisits
+        // verify password
+        if (password_verify($password, $row[2])) { // if tokens match
+            // start session, set session vars
+            session_start();
+            $_SESSION['initiated'] = true;
+            $_SESSION['check'] = hash('ripemd128', $_SERVER['REMOTE_ADDR'] . $_SERVER['HTTP_USER_AGENT']);
+            $_SESSION['username'] = $username;
 
-        // close db conn
-        $conn->close();
+            // close db conn
+            $conn->close();
 
-        // direct to dashboard page
-        header('Location: dashboard.php');
-        exit();
-    } else echo '<script>alert("Incorrect Log In.");</script>'; // tokens don't match
+            // direct to dashboard page
+            header('Location: dashboard.php');
+            exit();
+        } else echo '<script>alert("Incorrect Log In.");</script>'; // tokens don't match
+    } else echo '<script>alert("User does not exist.");</script>'; // No user exists
 }
 
 // include webpage
