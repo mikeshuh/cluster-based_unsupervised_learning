@@ -90,14 +90,18 @@ if (isset($_POST['modelName']) && isset($_POST['algo']) && isset($_POST['numClus
           if ($algo == 'eMax') {
             $clusters = emAlgorithm($data, $numClusters); // get cluster properties
 
-            // convert num arrays to strings
-            $means = implode(',', $clusters['means']);
-            $variances = implode(',', $clusters['variances']);
-            $mixingCoefficients = implode(',', $clusters['mixingCoefficients']);
+            if ($clusters == 'Invalid input parameters') { // numCluster > score count
+              echo '<script>alert("Number of clusters cannot be greater than number of scores.");</script>';
+            } else { // valid input
+              // convert num arrays to strings
+              $means = implode(',', $clusters['means']);
+              $variances = implode(',', $clusters['variances']);
+              $mixingCoefficients = implode(',', $clusters['mixingCoefficients']);
 
-            // insert trained model to db
-            insertDBEM($modelName, $username, $algo, $means, $variances, $mixingCoefficients);
-            echo '<script>alert("Model trained.");</script>';
+              // insert trained model to db
+              insertDBEM($modelName, $username, $algo, $means, $variances, $mixingCoefficients);
+              echo '<script>alert("Model trained.");</script>';
+            }
           }
         } else echo '<script>alert("File contents must only consist of numbers separated by commas.");</script>'; // invalid file content
       } else echo '<script>alert("Invalid file. Must be a txt file.");</script>'; // invalid file. not txt
@@ -125,14 +129,18 @@ if (isset($_POST['modelName']) && isset($_POST['algo']) && isset($_POST['numClus
         if ($algo == 'eMax') {
           $clusters = emAlgorithm($data, $numClusters); // get cluster properties
 
-          // convert num arrays to strings
-          $means = implode(',', $clusters['means']);
-          $variances = implode(',', $clusters['variances']);
-          $mixingCoefficients = implode(',', $clusters['mixingCoefficients']);
+          if ($clusters == 'Invalid input parameters') { // numCluster > score count
+            echo '<script>alert("Number of clusters cannot be greater than number of scores.");</script>';
+          } else { // valid input
+            // convert num arrays to strings
+            $means = implode(',', $clusters['means']);
+            $variances = implode(',', $clusters['variances']);
+            $mixingCoefficients = implode(',', $clusters['mixingCoefficients']);
 
-          // insert trained model to db
-          insertDBEM($modelName, $username, $algo, $means, $variances, $mixingCoefficients);
-          echo '<script>alert("Model trained.");</script>';
+            // insert trained model to db
+            insertDBEM($modelName, $username, $algo, $means, $variances, $mixingCoefficients);
+            echo '<script>alert("Model trained.");</script>';
+          }
         }
       } else echo '<script>alert("Text input must only consist of numbers separated by commas.");</script>'; // invalid text content
     }
